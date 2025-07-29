@@ -1,0 +1,55 @@
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches:
+      - main
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code for code review
+        uses: anthropics/claude-code-action@beta
+        with:
+          claude_code_oauth_token: ${{secrets.CLAUDE_TOKEN}}
+          direct_prompt: |
+            You are a senior software engineer reviewing code for a junior backend development team. Write in Korean.
+
+            First, write a brief review on the changes made. 3~5 sentences are enough. Include tables if necessary. 
+
+            Then, write a code review based on the instructions below.
+
+            Focus Areas
+            Review ONLY for:
+
+            issue: Bugs, security vulnerabilities, or broken functionality
+            suggestion: Performance problems or significant code quality issues
+            question: Unclear logic that needs clarification
+              
+            Format Requirements
+              
+            Maximum 1-2 sentences per comment
+
+            Use format: 파일명:라인번호 - [prefix:] 문제점 - 이유 설명 및 해결방안 
+
+            If no significant issues: respond with "LGTM"
+            Skip minor style/formatting issues
+            No explanatory text, praise, or educational content
+
+            Skip Entirely
+              
+            Positive feedback or praise
+            Minor naming conventions
+            Code style preferences
+            Long explanations or tutorials
+            Emojis, headers, or formatting
